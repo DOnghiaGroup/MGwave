@@ -41,8 +41,8 @@ import MGwave as wave
 The main function is run_wavelet(). It will create a histogram of the input data, then perform the wavelet transformation at the specified scales, returning the wavelet coefficients across the entire histogram in addition to information about the detected extrema. The use case showcased in the methods paper **cite paper here** is to detect overdensities and underdensities in the kinematic plane of astronomical data from the *Gaia* satellite. This is implemented using the following commands.
 
 ```python
-img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(vr, vphi, bands=[3,4], bins=[600,600], plot_range=[[-150,150],[50,350]],
-                                                                extrema=True, verbose=True, extra_output=True)
+img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(vr, vphi, bands=[3,4], bins=[600,600],
+				plot_range=[[-150,150],[50,350]], extrema=True, verbose=True, extra_output=True)
 h,xe,ye=img
 ```
 
@@ -143,9 +143,9 @@ MGwave also has the capabilities to run Monte Carlo simulations to propagate unc
 These simulations are run with the same `wave.run_wavelet` function, however there are several additional arguments that need to be supplied:
 
 ```python
-img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(vr, vphi, bands=[4], bins=[600,600], plot_range=[[-150,150],[50,350]],
-                                                                extrema=True, verbose=True, extra_output=True, x_error=vr_err,
-                                                                y_error=vphi_err, run_simulations=True, N=2000, multiprocessing=True)
+img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(vr, vphi, bands=[3,4], bins=[600,600],
+				plot_range=[[-150,150],[50,350]], extrema=True, verbose=True, extra_output=True,
+				x_error=vr_err, y_error=vphi_err, run_simulations=True, N=2000, multiprocessing=True)
 h,xe,ye=img
 ```
 Here we have specified the radial velocity and azimuthal velocity errors in the `x_error` and `y_error` arguments, and set `run_simulations` to `True`. `N=2000` specifies that we wish to run 2000 simulations, and `multiprocessing=True` enables the use of the python multiprocessing module to run the code across multiple cores (if available).
