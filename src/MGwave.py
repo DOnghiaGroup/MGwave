@@ -9,7 +9,7 @@
 ###
 
 ###
-# 
+#
 # The main function is run_wavelet which will calculate the histogram, wavelet
 # transform, extremal points, and significance for each extremum.
 # The starlet transform is used for the wavelet transformation.
@@ -419,7 +419,7 @@ def phi_norm(scl,x):
 # ------------------------------------------------------------------------------
 # ------------------------------  MAIN FUNCTIONS -------------------------------
 
-def get_significance(wt,max_i,min_i,ns,j,nmin={'max':2,'min':3},verbose=0,return_pdfs=False,reduce_wavelet=False):
+def get_significance(wt,max_i,min_i,ns,j,nmin={'max':3,'min':4},verbose=0,return_pdfs=False,reduce_wavelet=False):
     """
     Use the F(c) integral (F function) to determine significance values for each
     extrema found in the wavelet image wt.
@@ -440,7 +440,7 @@ def get_significance(wt,max_i,min_i,ns,j,nmin={'max':2,'min':3},verbose=0,return
     nmin : dict | int, optional
         If int, specifies the minimum number of events to consider for significance.
         You can specify different values for minima vs maxima by passing a dictionary
-        with keys "min" and "max". (default: {'max':2,'min':3})
+        with keys "min" and "max". (default: {'max':3,'min':4})
     verbose : bool, optional
         Will print output updating on the progress of the function (default: False)
     return_pdfs : bool, optional
@@ -680,7 +680,7 @@ def simulate(x,x_error,y,y_error,maximum,minimum,N=10,min_d=2,bands=[4],plot_ran
         print("done ({:3.3f} s)".format(time.time()-stime2))
     return count_sim
 
-def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':2,'min':4},
+def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4},
         allpoints=False,verbose=False,extrema=True,extra_output=False,
         reduce_wavelet=False,x_error=None,y_error=None,run_simulations=False,N=10,multiprocessing=False):
     """
@@ -711,7 +711,7 @@ def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':2,'min':4
     nmin : dict | int, optional
         If int, specifies the minimum number of events to consider for significance.
         You can specify different values for minima vs maxima by passing a dictionary
-        with keys "min" and "max". (default: {'max':2,'min':4})
+        with keys "min" and "max". (default: {'max':3,'min':4})
     allpoints : bool, optional
         Whether to calculate the significance for every point in the image. If True,
         the function will return an array the same size as the histogram image with

@@ -102,6 +102,7 @@ Here we will look at the structure of the `maximum`, `minimum`, `indexmax`, and 
 
 | x-location | y-location | significance value | wavelet coefficient | number of stars used to calculate wavelet |
 |---|---|---|---|---|
+
 The last two columns are included because of `extra_output=True`.
 
 ```python
