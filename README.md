@@ -6,14 +6,14 @@ Wavelet transformation code to enable detection of kinematic moving groups in as
 
 ## Dependencies
 
-MGwave requires several common python packages:
+MGwave requires several common python packages (tested versions in parentheses):
 
-- numpy
-- matplotlib
-- scipy
-- seaborn
-- tqdm
-- opencv-python (cv2)
+- numpy (1.20.1)
+- matplotlib (3.3.4)
+- scipy (1.2.1)
+- seaborn (0.11.0)
+- tqdm (4.31.1)
+- opencv-python (cv2) (4.3.0.36)
 
 MGwave also makes use of the Starlet transformation developed by J.L. Starck and F. Murtagh ("Image Restoration with Noise Suppression Using the Wavelet Transform", Astronomy and Astrophysics, 288, pp-343-348, 1994). It has been implemented in Python by Michael Broxton ([https://github.com/broxtronix/pymultiscale](https://github.com/broxtronix/pymultiscale)).
 It has been updated to work with Python 3 and is included in this package source.
