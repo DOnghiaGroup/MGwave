@@ -13,6 +13,7 @@ MGwave requires several common python packages:
 - scipy
 - seaborn
 - tqdm
+- opencv-python (cv2)
 
 MGwave also makes use of the Starlet transformation developed by J.L. Starck and F. Murtagh ("Image Restoration with Noise Suppression Using the Wavelet Transform", Astronomy and Astrophysics, 288, pp-343-348, 1994). It has been implemented in Python by Michael Broxton ([https://github.com/broxtronix/pymultiscale](https://github.com/broxtronix/pymultiscale)).
 It has been updated to work with Python 3 and is included in this package source.
