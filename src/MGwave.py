@@ -644,7 +644,7 @@ def simulate(x,x_error,y,y_error,maximum,minimum,N=10,min_d=2,bands=[4],plot_ran
             if (verbose):
                 results = list(tqdm(p.imap(sim_partial, range(N)),total=N,position=0,leave=True))
             else:
-                results = p.imap(sim_partial, range(N))
+                results = p.map(sim_partial, range(N))
     # output is the result of each run of the simulation
     else:
         results = []

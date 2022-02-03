@@ -51,7 +51,7 @@ def runwt(R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin,band
 
     img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(-1*vr,vphi, bands=bands, bins=bins,
                                                                 plot_range=wt_range, allpoints=False,
-                                                                extrema=True, verbose=False, nmin=1, extra_output=True,
+                                                                extrema=True, verbose=False, extra_output=True,
                                                                 reduce_wavelet=False,x_error=vr_err,y_error=vphi_err,
                                                                 run_simulations=runsimulations,N=Nsims,
                                                                 multiprocessing=multiprocessing)
@@ -135,7 +135,7 @@ def run_worms(R,phi,z,V_r,V_phi,rmin,rmax,deltar,phicent=180,philim=1.5,zlim=0.5
 
     '''
 
-    imax = int((rmax-rmin)/deltar)
+    imax = int((rmax-rmin)/deltar) + 1
 
     runwt_partial = partial(runwt,R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin, \
                         bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo)
@@ -148,9 +148,10 @@ def run_worms(R,phi,z,V_r,V_phi,rmin,rmax,deltar,phicent=180,philim=1.5,zlim=0.5
             # output = p.map(runwt_partial, range(imax))
     else:
         output = []
-        for i in range(imax):
-            print("Running {}/{}...".format(i,imax))
+        for i in tqdm(range(imax)):
+            # print("\rRunning {}/{}...".format(i+1,imax),end="")
             output.append(runwt_partial(i))
+        print("done")
 
     allmaxs = [o[0] for o in output]
     allmins = [o[1] for o in output]
@@ -269,7 +270,8 @@ def plot_worms(allmaxs,rvals,ax=None,wormdelta=5,minmcval=None,plot_range=[[-120
     else:
         ax.set_title(r"worm$\Delta$ <= {:.0f}".format(wormdelta))
     if (colorbar):
-        plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),label='R (kpc)')
+        cbar_ticks = np.array(range(9))*(rmax-rmin)/8. + rmin
+        plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),label='R (kpc)',ticks=cbar_ticks)
     # plt.show()
 
 def plot_contours(allmaxs,allwts,rvals,clevel,plot_rlims=None,ax=None,wt_range=[[-150,150],[50,350]],bins=[300,300],
@@ -359,5 +361,6 @@ def plot_contours(allmaxs,allwts,rvals,clevel,plot_rlims=None,ax=None,wt_range=[
     ax.set_ylim(plot_range[1])
     ax.set_ylabel(r"V$_\phi$ (km s$^{-1}$)")
     if (colorbar):
-        plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),label='R (kpc)')
+        cbar_ticks = np.array(range(9))*(rmax-rmin)/8. + rmin
+        plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),label='R (kpc)',ticks=cbar_ticks)
     # plt.show()
