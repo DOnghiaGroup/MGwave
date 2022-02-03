@@ -364,6 +364,7 @@ def get_pdf_single_event(wavelet,gridsize=200):
 
     """
 
+    fig = plt.figure()
     ax = sns.kdeplot(wavelet,bw_adjust=0.2,gridsize=int(gridsize))
     H1 = ax.lines[0].get_ydata()
     x1 = ax.lines[0].get_xdata()
