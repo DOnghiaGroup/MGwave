@@ -18,7 +18,7 @@ import numpy as np
 import MGwave as wave
 
 
-def runwt(R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin,bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo,i):
+def runwt(R,phi,z,V_r,V_phi,rlim,philim,zlim,rmin,rmax,deltar,phicent,bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo,i):
     '''
     Run the wavelet transformation for a given radial bin. Automatically masks
     the data and runs the wavelet transformation with significance calculation
@@ -28,7 +28,7 @@ def runwt(R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin,band
 
     '''
     r_bin = rmin + i*deltar
-    zrmask = (abs(z)<zlim) & (R > r_bin-deltar_bin) & (R < r_bin+deltar_bin)
+    zrmask = (abs(z)<zlim) & (R > r_bin-rlim) & (R < r_bin+rlim)
     if (phicent == 180):
         phimask = ((phi<phicent)&(phi>phicent-philim)) | ((phi>-phicent)&(phi<-phicent+philim))
     else:
@@ -49,7 +49,7 @@ def runwt(R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin,band
         runsimulations = True
         Nsims = montecarlo
 
-    img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(-1*vr,vphi, bands=bands, bins=bins,
+    img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(vr,vphi, bands=bands, bins=bins,
                                                                 plot_range=wt_range, allpoints=False,
                                                                 extrema=True, verbose=False, extra_output=True,
                                                                 reduce_wavelet=False,x_error=vr_err,y_error=vphi_err,
@@ -59,12 +59,61 @@ def runwt(R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin,band
 
     return maximum,minimum,wt
 
-def run_worms(R,phi,z,V_r,V_phi,rmin,rmax,deltar,phicent=180,philim=1.5,zlim=0.5,deltar_bin=0.1,
-                 bands=[3],wt_range=[[-150,150],[50,350]],bins=[300,300],V_rerr=None,V_phierr=None,
-                 multiprocessing=False,montecarlo=False):
+def runwt_phi(R,phi,z,V_r,V_phi,rlim,philim,zlim,rcent,phimin,phimax,deltaphi,bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo,i):
+    '''
+    Run the wavelet transformation for a given radial bin. Automatically masks
+    the data and runs the wavelet transformation with significance calculation
+    and optionally Monte Carlo simulations.
+
+    Usually run automatically from run_worms.
+
+    '''
+    phi_bin = phimin + i*deltaphi
+    zrmask = (abs(z)<zlim) & (R > rcent-rlim) & (R < rcent+rlim)
+    phiedges = np.array([phi_bin - philim, phi_bin + philim])
+    # if ((phiedges[0] < 180) & (phiedges[1] > 180)):
+    #     phimask = ((phi<180)&(phi>phiedges[0])) | ((phi>-180)&(phi<360-phiedges[1]))
+    # else:
+    #     phimask = (phi > phiedges[0]) & (phi < phiedges[1])
+    if (np.any(phiedges > 180) | np.any(phiedges < -180)):
+        raise Exception("Phi bin edges must not cross +/- 180 degrees.")
+    phimask = (phi > phiedges[0]) & (phi < phiedges[1])
+    mask = zrmask & phimask
+    vr = V_r[mask]
+    vphi = V_phi[mask]
+    if ((V_rerr is not None) & (V_phierr is not None)):
+        vr_err = V_rerr[mask]
+        vphi_err = V_phierr[mask]
+    else:
+        vr_err = None
+        vphi_err = None
+
+    runsimulations = False
+    Nsims = None
+    if (montecarlo):
+        runsimulations = True
+        Nsims = montecarlo
+
+    img,wt,maximum,minimum,indexmax,indexmin = wave.run_wavelet(vr,vphi, bands=bands, bins=bins,
+                                                                plot_range=wt_range, allpoints=False,
+                                                                extrema=True, verbose=False, extra_output=True,
+                                                                reduce_wavelet=False,x_error=vr_err,y_error=vphi_err,
+                                                                run_simulations=runsimulations,N=Nsims,
+                                                                multiprocessing=multiprocessing)
+    h,xe,ye=img
+
+    return maximum,minimum,wt
+
+def run_worms(R,phi,z,V_r,V_phi,rlim=0.1,philim=1.5,zlim=0.5,
+                rmin=None,rmax=None,deltar=None,phicent=180,
+                rcent=8.15,phimin=None,phimax=None,deltaphi=None,
+                bands=[3],wt_range=[[-150,150],[50,350]],bins=[300,300],V_rerr=None,V_phierr=None,
+                multiprocessing=False,montecarlo=False):
     '''
     Run the wavelet transformation on data automatically binning into a sequence
     of radial bins to track the evolution of moving groups throughout radius.
+    Must supply r range (using rmin, rmax, deltar, phicent) OR
+        phi range (using rcent, phimin, phimax, deltaphi)
 
     Parameters
     ----------
@@ -78,22 +127,39 @@ def run_worms(R,phi,z,V_r,V_phi,rmin,rmax,deltar,phicent=180,philim=1.5,zlim=0.5
         Radial velocity in Galactocentric coordinates for all stars
     V_phi : ndarray
         Azimuthal velocity in Galactocentric coordinates for all stars
-    rmin : float
-        Minimum Galactocentric radius
-    rmax : float
-        Maximum Galactocentric radius
-    deltar : float
-        Step size between radial bins (i.e. deltar = 0.01 and deltar_bin = 0.1
+    rlim : float, optional
+        Width of each radial bin (i.e. deltar = 0.01 and rlim = 0.1
         will produce radial bins of [(5.0,5.1), (5.01,5.11), (5.02,5.22)])
-    phicent : float, optional
-        Azimuthal value to center all the bins on in degrees. (default: 180)
     philim : float, optional
         Azimuthal size of the bins in degrees. (default: 1.5)
     zlim : float, optional
         Cutoff for vertical height of stars in kpc. (default: 0.5)
-    deltar_bin : float, optional
-        Width of each radial bin (i.e. deltar = 0.01 and deltar_bin = 0.1
-        will produce radial bins of [(5.0,5.1), (5.01,5.11), (5.02,5.22)])
+    rmin : float, optional
+        Minimum Galactocentric radius. If supplied, must also supply rmax and deltar
+        and must not supply phimin, phimax, or deltaphi. (default: None)
+    rmax : float, optional
+        Maximum Galactocentric radius. If supplied, must also supply rmin and deltar
+        and must not supply phimin, phimax, or deltaphi. (default: None)
+    deltar : float, optional
+        Step size between radial bins (i.e. deltar = 0.01 and rlim = 0.1
+        will produce radial bins of [(5.0,5.1), (5.01,5.11), (5.02,5.22)]).
+        If supplied, must also supply rmin and rmax and must not supply 
+        phimin, phimax, or deltaphi. (default: None)
+    phicent : float, optional
+        Azimuthal value to center all the bins on in degrees. (default: 180)
+    phimin : float
+        Minimum phi value. If supplied, must also supply phimax and deltaphi
+        and must not supply rmin, rmax, or deltar. (default: None)
+    phimax : float
+        Maximum phi value. If supplied, must also supply phimax and deltaphi
+        and must not supply rmin, rmax, or deltar. (default: None)
+    deltaphi : float
+        Step size between phi bins (i.e. deltaphi = 0.5 and philim = 3
+        will produce phi bins of [(0,3), (0.5,3.5), (1,4)]).
+        If supplied, must also supply phimin and phimax and must not supply 
+        rmin, rmax, or deltar. (default: None)
+    rcent : float
+        Radial center for all phi bins. (default: 8.15)
     bands : list, optional
         Bands in which to compute the wavelet transform. Band values correspond
         to scales of 2**(band). (default: [3])
@@ -135,10 +201,14 @@ def run_worms(R,phi,z,V_r,V_phi,rmin,rmax,deltar,phicent=180,philim=1.5,zlim=0.5
 
     '''
 
-    imax = int((rmax-rmin)/deltar) + 1
-
-    runwt_partial = partial(runwt,R,phi,z,V_r,V_phi,rmin,rmax,deltar,zlim,phicent,philim,deltar_bin, \
-                        bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo)
+    if ((rmin is not None) & (rmax is not None) & (deltar is not None)):
+        imax = int((rmax-rmin)/deltar) + 1
+        runwt_partial = partial(runwt,R,phi,z,V_r,V_phi,rlim,philim,zlim,rmin,rmax,deltar,phicent, \
+                            bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo)
+    elif ((phimin is not None) & (phimax is not None) & (deltaphi is not None)):
+        imax = int((phimax-phimin)/deltaphi) + 1
+        runwt_partial = partial(runwt_phi,R,phi,z,V_r,V_phi,rlim,philim,zlim,rcent,phimin,phimax,deltaphi, \
+                            bands,wt_range,bins,V_rerr,V_phierr,multiprocessing,montecarlo)
     if (multiprocessing and (montecarlo == False)):
         ncores = None
         if (multiprocessing > 1):
@@ -205,7 +275,7 @@ def plot_worms(allmaxs,rvals,ax=None,wormdelta=5,minmcval=None,plot_range=[[-120
     sun_i = 0
     if (sun_r is not None):
         # sun_i = np.where(np.abs(rvals-sun_r) == min(np.abs(rvals-sun_r)))[0][0]
-        sun_i = np.digitize(sun_r,rvals)
+        sun_i = np.digitize(sun_r,rvals)-1
 
     for i in range(len(allmaxs)):
         mx = allmaxs[i][0]
