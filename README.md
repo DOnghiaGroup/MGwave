@@ -11,6 +11,7 @@ MGwave requires several common python packages (tested versions in parentheses):
 - numpy (1.20.1)
 - matplotlib (3.3.4)
 - scipy (1.2.1)
+- scikit-image (0.19.3)
 - seaborn (0.11.0)
 - tqdm (4.31.1)
 - opencv-python (cv2) (4.3.0.36)
