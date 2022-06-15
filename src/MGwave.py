@@ -681,7 +681,9 @@ def simulate(x,x_error,y,y_error,maximum,minimum,N=10,min_d=2,bands=[4],plot_ran
         print("done ({:3.3f} s)".format(time.time()-stime2))
     return count_sim
 
-def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4},
+def run_wavelet(x=None,y=None,plot_range=None,bins=100,
+        hist=None,xedges=None,yedges=None,
+        bands=[3,4,5],nmin={'max':3,'min':4},
         allpoints=False,verbose=False,extrema=True,extra_output=False,
         reduce_wavelet=False,x_error=None,y_error=None,run_simulations=False,N=10,multiprocessing=False):
     """
@@ -694,11 +696,15 @@ def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4
     your number of bins and plot_range to determine the physical size of the detected
     structures.
 
+    Must supply either:
+        (1) x and y (in this case, the code will create the histogram), OR
+        (2) hist, xedges, and yedges (a histogram that the user has created)
+
     Parameters
     ----------
-    x : list (n,)
+    x : list (n,) | None, optional
         x coordinate values of the data points
-    y : list (n,)
+    y : list (n,) | None, optional
         y coordinate values of the data points
     plot_range : list (2,2) | None, optional
         The x and y limits of the histogram in physical units. If None, np.histogram2d
@@ -706,6 +712,15 @@ def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4
     bins : list (2,) | int, optional
         The number of bins in x and y when performing the initial histogram. If
         an int is passed in, the same number of bins are used for x and y. (default: 100)
+    hist : array (n,n) | None, optional
+        The 2D image output from e.g. np.histogram2d. If x and y are supplied, this parameter
+        is ignored.
+    xedges : array (n,) | None, optional
+        The list of x edges for the supplied 2D histogram. If hist is supplied, this must
+        be supplied.
+    yedges : array (n,) | None, optional
+        The list of y edges for the supplied 2D histogram. If hist is supplied, this must
+        be supplied.
     bands : list (x,), optional
         Which wavelet bands to compute. Band values correspond to scales of 2**(band).
         (default: [3,4,5])
@@ -790,10 +805,17 @@ def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4
             raise Exception("Can't run simulations without x_error and y_error specified.")
 
     # Perform the histogram and the wavelet transform
-    if (plot_range is None):
-        h,xedges,yedges = np.histogram2d(x,y,bins=bins)
+    if ((x is not None) & (y is not None)):
+        if (plot_range is None):
+            h,xedges,yedges = np.histogram2d(x,y,bins=bins)
+        else:
+            h,xedges,yedges = np.histogram2d(x,y,bins=bins,range=plot_range)
+    elif ((hist is not None) & (xedges is not None) & (yedges is not None)):
+        h = hist
+        bins = [len(xedges)-1,len(yedges)-1]
+        plot_range = [[xedges[0],xedges[-1]],[yedges[0],yedges[-1]]]
     else:
-        h,xedges,yedges = np.histogram2d(x,y,bins=bins,range=plot_range)
+        raise RuntimeException("Please supply either x and y, or hist, xedges, and yedges.")
     wt,scale = starlet.starlet_transform(h.T,num_bands=max(bands)+1,gen2=False)
     mrs = []
     max_out = []
@@ -809,7 +831,7 @@ def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4
             totalstime = time.time()
 
             if (len(scale) <= bands[s]):
-                raise RuntimeException("Band {} not fount in wavelet transform scales.".format(bands[s]))
+                raise RuntimeException("Band {} not found in wavelet transform scales.".format(bands[s]))
             j = bands[s]
 
             if (verbose):
@@ -909,6 +931,8 @@ def run_wavelet(x,y,plot_range=None,bins=100,bands=[3,4,5],nmin={'max':3,'min':4
                 print("")
 
     if (run_simulations):
+        if ((x is None) | (y is None)):
+            print("Warning: Cannot run simulations without supplying x,y and x_error,y_error. Skipping.")
         if (verbose):
             time_start = time.time()
             print('Running Monte Carlo Simulations')
