@@ -878,11 +878,13 @@ def run_wavelet(x=None,y=None,plot_range=None,bins=100,
                 ns_extrema['min'] = np.array([all_ns_extrema[tuple(np.int_(p[:2]))] for p in min_i])
 
                 if (allpoints == True):
-                    sig_extrema = []
-                    for i in range(len(max_i)):
-                        mask = ((max_i[i][0]**2 + max_i[i][1]**2 )< 2**j)
-                        sig_extrema.append(np.mean(mrs[mask]))
-                    sig_extrema = np.array(sig_extrema)
+                    sig_extrema = {'max':[],'min':[]}
+                    for mkey,mi in zip(['max','min'],[max_i,min_i]):
+                        for i in range(len(mi)):
+                            # mask = ((mi[i][0]**2 + mi[i][1]**2) < 2**j)
+                            # sig_extrema[mkey].append(np.mean(mrs[s][mkey][mask]))
+                            sig_extrema[mkey].append([mi[i][0],mi[i][1],mrs[s][mkey][(int(mi[i][1]),int(mi[i][0]))]])
+                        sig_extrema[mkey] = np.array(sig_extrema[mkey])
                 else:
                     sig_extrema = get_significance(wt[j],max_i,min_i,ns_extrema,j=j,nmin=nmin,verbose=False,reduce_wavelet=reduce_wavelet)
 
