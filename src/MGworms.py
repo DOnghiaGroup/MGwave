@@ -229,7 +229,7 @@ def run_worms(R,phi,z,V_r,V_phi,rlim=0.1,philim=1.5,zlim=0.5,
 
     return allmaxs,allmins,allwts
 
-def plot_worms(allmaxs,rvals,ax=None,wormdelta=5,minmcval=None,plot_range=[[-120,120],[170,270]],sun_r=8.34,colorbar=True):
+def plot_worms(allmaxs,rvals,ax=None,wormdelta=5,minmcval=None,plot_range=[[-120,120],[170,270]],sun_r=8.34,colorbar=True,cbar_nticks=9):
     '''
     Plot the detected maxima across all radii. Colored by radius, optionally requiring
     all points to be within "wormdelta" of another point, or have a Monte Carlo
@@ -340,12 +340,12 @@ def plot_worms(allmaxs,rvals,ax=None,wormdelta=5,minmcval=None,plot_range=[[-120
     else:
         ax.set_title(r"worm$\Delta$ <= {:.0f}".format(wormdelta))
     if (colorbar):
-        cbar_ticks = np.array(range(9))*(rmax-rmin)/8. + rmin
+        cbar_ticks = np.array(range(cbar_nticks))*(rmax-rmin)/float(cbar_nticks-1) + rmin
         plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),label='R (kpc)',ticks=cbar_ticks)
     # plt.show()
 
 def plot_contours(allmaxs,allwts,rvals,clevel,plot_rlims=None,ax=None,wt_range=[[-150,150],[50,350]],bins=[300,300],
-                alpha=1,plot_range=[[-120,120],[170,270]],sun_r=8.34,plot_solar_groups=True,colorbar=True):
+                alpha=1,plot_range=[[-120,120],[170,270]],sun_r=8.34,plot_solar_groups=True,colorbar=True,cbar_nticks=9):
     '''
     Plot the detected maxima across all radii. Colored by radius, optionally requiring
     all points to be within "wormdelta" of another point, or have a Monte Carlo
@@ -431,6 +431,6 @@ def plot_contours(allmaxs,allwts,rvals,clevel,plot_rlims=None,ax=None,wt_range=[
     ax.set_ylim(plot_range[1])
     ax.set_ylabel(r"V$_\phi$ (km s$^{-1}$)")
     if (colorbar):
-        cbar_ticks = np.array(range(9))*(rmax-rmin)/8. + rmin
+        cbar_ticks = np.array(range(cbar_nticks))*(rmax-rmin)/float(cbar_nticks-1) + rmin
         plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),label='R (kpc)',ticks=cbar_ticks)
     # plt.show()
