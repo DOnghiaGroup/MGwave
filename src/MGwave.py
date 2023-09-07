@@ -824,6 +824,10 @@ def run_wavelet(x=None,y=None,plot_range=None,bins=100,
     max_out_i = []
     min_out_i = []
 
+    for s in range(len(bands)):
+        j = bands[s]
+        wt2.append(wt[j])
+
     # Loop through each of the output bands
     if (extrema | allpoints):
         for s in range(len(bands)):
@@ -927,7 +931,6 @@ def run_wavelet(x=None,y=None,plot_range=None,bins=100,
                 if (verbose):
                     print("done ({:3.3f} s)".format(time.time() - stime))
 
-            wt2.append(wt[j])
             if (verbose):
                 print("band = {} done ({:3.3f} s)".format(bands[s],time.time() - totalstime))
                 print("")
